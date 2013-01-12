@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="css/slider.css"  rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.3.1/leaflet.css" />
+	<style type="text/css">
+        html { height: 100% }
+        body { height: 100%; margin: 0; padding: 0 }
+    	#map { height: 80%; width:80% }
+    </style>
+    
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+	<script src="http://cdn.leafletjs.com/leaflet-0.3.1/leaflet.js"></script>
+	<script type="text/javascript" src="slider.js"></script>
+
+	<script>
+	$( function(){
+		// create the slider
+		( 
+            new Razorfish.Slider({
+		        width : 800,
+			    handleWidth : 10,
+			    useRange : true,
+			    tabs : [
+				  { text : '7h',  date: new Date('01/01/2009 7:00')  }, 
+				  { text : '8h',  date: new Date('01/01/2009 8:00')  }, 
+				  { text : '9h',  date: new Date('01/01/2009 9:00')  }, 
+				  { text : '10h', date: new Date('01/01/2009 10:00') }, 
+				  { text : '11h', date: new Date('01/01/2009 11:00') }, 
+				  { text : '12h', date: new Date('01/01/2009 12:00') }, 
+				  { text : '13h', date: new Date('01/01/2009 13:00') }, 
+				  { text : '14h', date: new Date('01/01/2009 14:00') }, 
+				  { text : '15h', date: new Date('01/01/2009 15:00') }, 
+				  { text : '16h', date: new Date('01/01/2009 16:00') }, 
+				  { text : '17h', date: new Date('01/01/2009 17:00') }, 
+				  { text : '18h', date: new Date('01/01/2009 18:00') }, 
+				  { text : '19h', date: new Date('01/01/2009 19:00') }, 
+				  { text : '20h', date: new Date('01/01/2009 20:00') }, 
+				  { text : '21h', date: new Date('01/01/2009 21:00') }, 
+				  { text : '22h', date: new Date('01/01/2009 22:00') }, 
+				  { text : '23h', date: new Date('01/01/2009 23:00') }
+			      ]
+		    }) 
+		)
+		.prependTo( $("#slider") )
+		.bind     ( 'rangeMoved', rangeMoved )
+		.setRange ( 2, 4 );
+	});
+
+    var KEY = "hHRhSfLgXxcrqJvYNVZETrFdehggBmjDhKBBIqLL";
+
+	function rangeMoved( ev, minTab, maxTab ){
+		//MAKE REQUESTS TO OST API
+		map.removeLayer( shapes_layer );
+		shapes_layer = new L.LayerGroup();
+		requestTrips(0, minTab);
+		map.addLayer( shapes_layer );	
+	};
+	
+	function requestTrips(offset, minTab){
+	    $.ajax({
+            url:      'https://api.ost.pt/trips',
+            dataType: 'jsonp',
+            data:     {
+                key:       KEY,
+                time:      ""+minTab.date.getHours()+":00:00",
+                //time_span: ( minTab.date-maxTab.date )/1000/60/60,
+                results:   50,
+                offset:    offset ? offset : 0
+            },
+            success:  function( response ) { 
+                console.log( response );
+                //if (response.Meta.paginated_objects) {
+                //    requestTrips( offset+1 );
+                //};
+                for (var i=0; i < response.Objects.length; i++) {
+                    requestShapes( response.Objects[i].id )
+                };
+            }
+        });
+	};	
+	function requestShapes(id){
+	    $.ajax({
+            url:      'https://api.ost.pt/shapes',
+            dataType: 'jsonp',
+            data:     {
+                key:  KEY,
+                trip: id
+            },
+            success:  function( response ) { 
+                if (response.Objects.length) {
+                    requestShape( response.Objects[0].id );
+                };
+            }
+        });
+	};
+	function requestShape(id){
+	    $.ajax({
+            url:      'https://api.ost.pt/shapes/'+id,
+            dataType: 'jsonp',
+            data:     {
+                key: KEY
+            },
+            success:  function( response ) {
+                coords = response.line_string.coordinates;
+                line   = []; 
+                for (var j in coords) {
+                    line[j] = new L.LatLng( coords[j][1], coords[j][0] );
+                }
+                shapes_layer.addLayer( new L.Polyline( line, {
+                    color: "#00f",
+                    fillOpacity: 0.1,
+                    opacity: 0.2,
+                }) );
+            }
+        });
+	};
+	
+	</script>
+</head>
+<body>
+    <div id="map"></div>
+    <script type="text/javascript" charset="utf-8">
+        // CLOUDMADE SETTINGS
+		var cloudmade_url         = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png';
+		var cloudmade_attribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
+		var cloudmade             = new L.TileLayer( cloudmade_url, {
+		    maxZoom:     18, 
+		    attribution: cloudmade_attribution
+		});
+
+        var shapes_layer = new L.LayerGroup();
+        
+		// MAP
+        var map = new L.Map('map', {
+            center: new L.LatLng(40.219679, -8.4181),
+            zoom:   14,
+            layers: [shapes_layer],
+            doubleClickZoom: false,
+        });
+        map.addLayer( shapes_layer );
+        map.addLayer( cloudmade );
+    </script>
+    <div id="slider" style="margin-top: 10px">
+        
+    </div>
+    
+</body>
+</html>
