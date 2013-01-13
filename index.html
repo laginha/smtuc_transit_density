@@ -52,51 +52,82 @@
     var KEY = "hHRhSfLgXxcrqJvYNVZETrFdehggBmjDhKBBIqLL";
 
 	function rangeMoved( ev, minTab, maxTab ){
-		//MAKE REQUESTS TO OST API
 		map.removeLayer( shapes_layer );
 		shapes_layer = new L.LayerGroup();
-		requestTrips(0, minTab);
+		requestTrips(minTab, maxTab);
 		map.addLayer( shapes_layer );	
 	};
 	
-	function requestTrips(offset, minTab){
+	function getColor(sortable, index){
+	    total     = sortable.length;
+	    percentil = sortable[index][1]/(sortable[total-1][1]-sortable[0][1]+1) *100;
+	    if (percentil >= 50) {
+	        return "#F00";
+	    } else if (percentil >= 25) {
+	        return "#FFBB00";
+	    }; else {
+	        return "#FFEE00";
+	    };
+	};
+	
+	function countStartTimes(start_times, max){
+	    count = 0;
+	    for (var i=0; i < start_times.length; i++) {
+	        time = new Date('01/01/2009 '+start_times[i])
+	        if (time <= max.date) {
+	            count += 1;
+	        };
+	    };
+        return count;
+	};
+	
+	function sortShapes(){
+	    var sortable = [];
+        for (var shape_id in SHAPE_IDS)
+            sortable.push([shape_id, SHAPE_IDS[shape_id]])
+        sortable.sort(function(a, b) {return a[1] - b[1]})
+        return sortable
+	}
+	
+	var SHAPE_IDS = {};
+	var RESULTS_PER_PAGE = 50;
+	
+	function requestTrips(from, to, offset){
+	    offset = offset ? offset : 0;
 	    $.ajax({
             url:      'https://api.ost.pt/trips',
             dataType: 'jsonp',
             data:     {
                 key:       KEY,
-                time:      ""+minTab.date.getHours()+":00:00",
-                //time_span: ( minTab.date-maxTab.date )/1000/60/60,
-                results:   50,
-                offset:    offset ? offset : 0
+                time:      ""+from.date.getHours()+":00:00",
+                results:   RESULTS_PER_PAGE,
+                offset:    RESULTS_PER_PAGE*offset,
             },
-            success:  function( response ) { 
-                console.log( response );
-                //if (response.Meta.paginated_objects) {
-                //    requestTrips( offset+1 );
-                //};
-                for (var i=0; i < response.Objects.length; i++) {
-                    requestShapes( response.Objects[i].id )
+            success:  function( response ) {
+                if (response.Meta.paginated_objects) {
+                    for (var i=0; i < response.Objects.length; i++) {
+                        trip = response.Objects[i];
+                        if (trip.shape_id in SHAPE_IDS) {
+                            SHAPE_IDS[ trip.shape_id ] += countStartTimes(trip.start_times, to);
+                        } else {
+                            SHAPE_IDS[ trip.shape_id ]  = countStartTimes(trip.start_times, to);
+                        };
+                    };
+                    requestTrips( from, to, offset+1 );
+                }else {
+                    sortable  = sortShapes()  
+                    SHAPE_IDS = {}                                   
+                    for (var i in sortable) {
+                        color = getColor( sortable, i );
+                        for (var j=0; j < sortable[i][1]; j++) {
+                            requestShape( sortable[i][0], color );
+                        };
+                    };
                 };
             }
         });
 	};	
-	function requestShapes(id){
-	    $.ajax({
-            url:      'https://api.ost.pt/shapes',
-            dataType: 'jsonp',
-            data:     {
-                key:  KEY,
-                trip: id
-            },
-            success:  function( response ) { 
-                if (response.Objects.length) {
-                    requestShape( response.Objects[0].id );
-                };
-            }
-        });
-	};
-	function requestShape(id){
+	function requestShape(id, color){
 	    $.ajax({
             url:      'https://api.ost.pt/shapes/'+id,
             dataType: 'jsonp',
@@ -110,9 +141,9 @@
                     line[j] = new L.LatLng( coords[j][1], coords[j][0] );
                 }
                 shapes_layer.addLayer( new L.Polyline( line, {
-                    color: "#00f",
+                    color: color,
                     fillOpacity: 0.1,
-                    opacity: 0.2,
+                    opacity: 0.1,
                 }) );
             }
         });
@@ -124,7 +155,7 @@
     <div id="map"></div>
     <script type="text/javascript" charset="utf-8">
         // CLOUDMADE SETTINGS
-		var cloudmade_url         = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png';
+		var cloudmade_url         = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/22677/256/{z}/{x}/{y}.png';
 		var cloudmade_attribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
 		var cloudmade             = new L.TileLayer( cloudmade_url, {
 		    maxZoom:     18, 
