@@ -5,10 +5,26 @@ body {
     height: 100%; margin: 0; padding: 0
 }
 #map {
-    height: 80%;
-    width:80%;
+    height: 400px;
+    width: 100%;
+    margin-top: 20px;
 }
 #slider {
+    margin: 0 auto;
     margin-top: 50px;
-    width:80%;
+    width: 50%;
+    /*max-width: 500px;*/
+}
+
+h1 {
+    color: #333333;
+    margin-top: 25px;
+    text-align: center;
+}
+
+h3 {
+    color: #666666;
+    text-align: center;
+    margin-top: 10px;
+    font-family: 'Dosis', sans-serif;
 }
