@@ -10,10 +10,23 @@ body {
     margin-top: 20px;
 }
 #slider {
-    margin: 0 auto;
-    margin-top: 50px;
-    width: 50%;
-    /*max-width: 500px;*/
+}
+
+.row-fluid {
+    margin-top: 25px;
+}
+
+#btn-holder {
+    vertical-align: middle;
+}
+
+#btn-holder button {
+    height: 30px;
+}
+
+button#draw {
+    /* clear: both; */
+    vertical-align: middle;
 }
 
 h1 {

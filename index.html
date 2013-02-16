@@ -29,7 +29,21 @@
             </h3>
         </header>
         <div id="map"></div>
-        <div id="slider"></div>
+
+        <div class="row-fluid">
+          <div class="span12">
+            <div class="row-fluid">
+              <div class="span3">
+              </div>
+              <div class="span5">
+                <div id="slider"></div>
+              </div>
+              <div id="btn-holder" class="span1">
+                <button id="draw" class="btn">Draw it!</button>
+              </div>
+            </div>
+          </div>
+        </div>
     </div>
 
     <script type="text/javascript" charset="utf-8">
@@ -74,16 +88,24 @@
             });
             //-->
 
+            var timeSpan = {
+                from: { text: currentHour+"h", date: new Date('01/01/2009 '+currentHour+':00') },
+                to: { text: (currentHour+1)+"h", date: new Date('01/01/2009 '+(currentHour+1)+':00') }
+            };
+
             // This event will not ne fired
             $("#slider").bind("valuesChanged", function(e, data) {
                 // console.log("Something moved. min: " + parseInt(data.values.min) + " max: " + parseInt(data.values.max));
 
-                var from = { text: data.values.min, date: new Date('01/01/2009 '+parseInt(data.values.min)+':00') };
-                var to = { text: data.values.max, date: new Date('01/01/2009 '+parseInt(data.values.max)+':00') };
+                timeSpan.from = { text: data.values.min, date: new Date('01/01/2009 '+parseInt(data.values.min)+':00') };
+                timeSpan.to = { text: data.values.max, date: new Date('01/01/2009 '+parseInt(data.values.max)+':00') };
+            });
 
+            $("#draw").click( function() {
                 map.removeLayer( shapes_layer );
                 shapes_layer = new L.LayerGroup();
-                requestTrips(from, to);
+
+                requestTrips(timeSpan.from, timeSpan.to);
                 map.addLayer( shapes_layer );
             });
     </script>
