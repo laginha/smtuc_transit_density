@@ -10,7 +10,7 @@ This is a simple packaged app for the [One.Stop.Transport](http://www.ost.pt)
 
 TODO List:
 
-* Caching in localStorage
+* ~~Caching in localStorage~~
 * Click a shapefile and show which routes that corresponds to
   * Then, hover a particular route and highlight that on the map, dimming the others
 * ~~Create a "Go" button, instead of just listening to slider events~~
