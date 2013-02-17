@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets" version="1.0.0"
+        id="http://widgets.tice.ipn.pt/smtuc-transit-density">
+   <name>SMTUC Mass Transit Density Graph</name>
+   <content src="index.html" />
+   <icon src="images/icon.jpg" />
+</widget>
+
+<!-- Icon "stolen" from the noun project -->
+<!-- <a href="http://thenounproject.com/noun/bus/#icon-No3604" target="_blank">Bus</a> designed by <a href="http://thenounproject.com/melolonta" target="_blank">Alfonso Melolonta Urbán</a> from The Noun Project -->
