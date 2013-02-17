@@ -5,8 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Add this to the head of your HTML layout -->
-    <link rel="stylesheet" href="http://www.ost.pt/css/apps/assets/bootstrap-v0.6.1.css">
-    <link href='http://fonts.googleapis.com/css?family=Dosis' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://www.ost.pt/css/apps/assets/bootstrap-v0.6.1.css">
+    <link href='https://fonts.googleapis.com/css?family=Dosis' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" type="text/css" href="http://cdn.leafletjs.com/leaflet-0.3.1/leaflet.css" />
     <link rel="stylesheet" type="text/css" href="css/iThing.css">
     <link rel="stylesheet" type="text/css" href="css/application.css">
@@ -18,13 +18,16 @@
     <script type="text/javascript" src="javascript/jQRangeSlider-min.js"></script>
     <script type="text/javascript" src="javascript/application.js"></script>
     <script type="text/javascript" src="javascript/store.min.js"></script>
+    <script type="text/javascript" src="javascript/app-container.js"></script>
+    <script type="text/javascript" src="javascript/i18n.js"></script>
+
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>
+            <!-- <h1>
                 SMTUC Mass Transit Density Graph
-            </h1>
+            </h1> -->
             <h3>
                 Drag the slider and check out the mass transit trips density
             </h3>
@@ -40,7 +43,7 @@
                 <div id="slider"></div>
               </div>
               <div id="btn-holder" class="span2">
-                <button id="draw" class="btn">Draw it!</button>
+                <button id="draw" class="btn"></button>
               </div>
             </div>
           </div>
@@ -49,67 +52,76 @@
 
     <script type="text/javascript" charset="utf-8">
 
-            // CLOUDMADE SETTINGS
-            var cloudmade_url         = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/22677/256/{z}/{x}/{y}.png';
-            var cloudmade_attribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
-            var cloudmade             = new L.TileLayer( cloudmade_url, {
-                maxZoom:     18,
-                attribution: cloudmade_attribution
-            });
+        // setting the default language to EN
+        i18n.setDefault();
+        $("#draw").html(i18n.draw_button);
+        // if (!window.opener) i18n.setLocale();
 
-            var shapes_layer = new L.LayerGroup();
+        // CLOUDMADE SETTINGS
+        var cloudmade_url         = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/22677/256/{z}/{x}/{y}.png';
+        var cloudmade_attribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
+        var cloudmade             = new L.TileLayer( cloudmade_url, {
+            maxZoom:     18,
+            attribution: cloudmade_attribution
+        });
 
-            // MAP
-            var map = new L.Map('map', {
-                center: new L.LatLng(40.219679, -8.4181),
-                zoom:   14,
-                layers: [shapes_layer],
-                doubleClickZoom: false,
-            });
+        var shapes_layer = new L.LayerGroup();
+
+        // MAP
+        var map = new L.Map('map', {
+            center: new L.LatLng(40.219679, -8.4181),
+            zoom:   14,
+            layers: [shapes_layer],
+            doubleClickZoom: false,
+        });
+        map.addLayer( shapes_layer );
+        map.addLayer( cloudmade );
+
+        now = new Date();
+        currentHour = now.getHours();
+        if (currentHour < 7 && currentHour > 22) {
+            currentHour = 7;
+        }
+
+        //<!--
+        $("#slider").rangeSlider({
+            bounds: {min: 7, max: 23},
+            arrows:false,
+            defaultValues:{min: currentHour, max: (currentHour + 1)},
+            range: {min: 1, max: 4},
+            formatter:function(val){
+                var value = Math.round(val * 5) / 5
+                return value.toString() + "h";
+            },
+            step: 1
+        });
+        //-->
+
+        var timeSpan = {
+            from: { text: currentHour+"h", date: new Date('01/01/2009 '+currentHour+':00') },
+            to: { text: (currentHour+1)+"h", date: new Date('01/01/2009 '+(currentHour+1)+':00') }
+        };
+
+        // This event will not ne fired
+        $("#slider").bind("valuesChanged", function(e, data) {
+            // console.log("Something moved. min: " + parseInt(data.values.min) + " max: " + parseInt(data.values.max));
+
+            timeSpan.from = { text: data.values.min, date: new Date('01/01/2009 '+parseInt(data.values.min)+':00') };
+            timeSpan.to = { text: data.values.max, date: new Date('01/01/2009 '+parseInt(data.values.max)+':00') };
+        });
+
+        $("#draw").click( function() {
+            map.removeLayer( shapes_layer );
+            shapes_layer = new L.LayerGroup();
+
+            getTrips(timeSpan.from, timeSpan.to);
             map.addLayer( shapes_layer );
-            map.addLayer( cloudmade );
-
-            now = new Date();
-            currentHour = now.getHours();
-            if (currentHour < 7 && currentHour > 22) {
-                currentHour = 7;
-            }
-
-            //<!--
-            $("#slider").rangeSlider({
-                bounds: {min: 7, max: 23},
-                arrows:false,
-                defaultValues:{min: currentHour, max: (currentHour + 1)},
-                range: {min: 1, max: 4},
-                formatter:function(val){
-                    var value = Math.round(val * 5) / 5
-                    return value.toString() + "h";
-                },
-                step: 1
-            });
-            //-->
-
-            var timeSpan = {
-                from: { text: currentHour+"h", date: new Date('01/01/2009 '+currentHour+':00') },
-                to: { text: (currentHour+1)+"h", date: new Date('01/01/2009 '+(currentHour+1)+':00') }
-            };
-
-            // This event will not ne fired
-            $("#slider").bind("valuesChanged", function(e, data) {
-                // console.log("Something moved. min: " + parseInt(data.values.min) + " max: " + parseInt(data.values.max));
-
-                timeSpan.from = { text: data.values.min, date: new Date('01/01/2009 '+parseInt(data.values.min)+':00') };
-                timeSpan.to = { text: data.values.max, date: new Date('01/01/2009 '+parseInt(data.values.max)+':00') };
-            });
-
-            $("#draw").click( function() {
-                map.removeLayer( shapes_layer );
-                shapes_layer = new L.LayerGroup();
-
-                getTrips(timeSpan.from, timeSpan.to);
-                map.addLayer( shapes_layer );
-            });
+        });
     </script>
+
+
+<!-- Icon "stolen" from the noun project -->
+<!-- <a href="http://thenounproject.com/noun/bus/#icon-No3604" target="_blank">Bus</a> designed by <a href="http://thenounproject.com/melolonta" target="_blank">Alfonso Melolonta Urbán</a> from The Noun Project -->
 
 </body>
 </html>
