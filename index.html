@@ -17,6 +17,7 @@
     <script type="text/javascript" src="javascript/jquery-ui-1.8.16.custom.min.js"></script>
     <script type="text/javascript" src="javascript/jQRangeSlider-min.js"></script>
     <script type="text/javascript" src="javascript/application.js"></script>
+    <script type="text/javascript" src="javascript/store.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -38,7 +39,7 @@
               <div class="span5">
                 <div id="slider"></div>
               </div>
-              <div id="btn-holder" class="span1">
+              <div id="btn-holder" class="span2">
                 <button id="draw" class="btn">Draw it!</button>
               </div>
             </div>
@@ -105,7 +106,7 @@
                 map.removeLayer( shapes_layer );
                 shapes_layer = new L.LayerGroup();
 
-                requestTrips(timeSpan.from, timeSpan.to);
+                getTrips(timeSpan.from, timeSpan.to);
                 map.addLayer( shapes_layer );
             });
     </script>
