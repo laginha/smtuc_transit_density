@@ -15,5 +15,6 @@ TODO List:
   * Then, hover a particular route and highlight that on the map, dimming the others
 * ~~Create a "Go" button, instead of just listening to slider events~~
 * ~~Move to OST bootstrap CSS theme~~
-* Make this a packaged app (xml manifest)
+* ~~Make this a packaged app (xml manifest)~~
 * Inherit i18n settings from OST Javascript API
+* Workaround to the HTTP leaflet linkage (breaks on Google Chrome)
