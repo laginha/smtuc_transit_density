@@ -51,17 +51,9 @@ function getTrips(from, to) {
     var tripShapes = store.get(key.toString());
 
     if (tripShapes) {
-
-        // debug
-        console.log("tripShapes from localStorage(" + key.toString() + "): " + tripShapes.keys + " shapes total");
-
         SHAPE_IDS = tripShapes;
         requestShapes( sortShapes() );
     } else {
-
-        // debug
-        console.log("Requesting trip shapes online...");
-
         requestTrips(timeSpan.from, timeSpan.to);
     }
 }
